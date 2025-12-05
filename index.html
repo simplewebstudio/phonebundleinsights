@@ -227,7 +227,7 @@
             mainContentEl.classList.remove('blur-sm', 'brightness-90', 'scale-95'); // Reset effects
         }
 
-        function renderDetail() {
+        function renderDetail(animate = true) {
             const phone = phones.find(p => p.id === state.selectedPhoneId);
             if (!phone) return;
 
@@ -236,7 +236,8 @@
 
             // Container
             const container = document.createElement('div');
-            container.className = "h-full flex flex-col px-6 py-2 justify-evenly animate-fade-in";
+            // Only add fade-in animation if requested (e.g., initial load)
+            container.className = `h-full flex flex-col px-6 py-2 justify-evenly ${animate ? 'animate-fade-in' : ''}`;
 
             // 1. Image Section
             const imageSection = document.createElement('div');
@@ -443,7 +444,7 @@
                 state.view = 'detail';
                 
                 renderHeader();
-                renderDetail();
+                renderDetail(true); // Animate fade-in on first load
                 
                 // Remove overlay
                 overlay.remove();
@@ -461,17 +462,17 @@
 
         function selectColor(idx) {
             state.selectedColorIdx = idx;
-            renderDetail();
+            renderDetail(false); // No animation on update
         }
 
         function selectSim(id) {
             state.selectedSimId = id;
-            renderDetail();
+            renderDetail(false); // No animation on update
         }
 
         function selectStorage(size) {
             state.selectedStorage = size;
-            renderDetail();
+            renderDetail(false); // No animation on update
         }
 
         function openForm() {
