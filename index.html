@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phone Shop Simulation</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <style>
+        /* Custom Animations */
+        @keyframes scaleIn {
+            0% { opacity: 0; transform: scale(0.5); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+        .animate-scale-in {
+            animation: scaleIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+        
+        @keyframes slideUpSpring {
+            0% { transform: translateY(100px) scale(0.9); opacity: 0; }
+            100% { transform: translateY(0) scale(1); opacity: 1; }
+        }
+        .animate-slide-up-spring {
+            animation: slideUpSpring 0.6s cubic-bezier(0.2, 0.8, 0.2, 1.1) forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+
+        @keyframes slideInRight {
+            from { transform: translateX(100%); }
+            to { transform: translateX(0); }
+        }
+        .animate-slide-in-right {
+            animation: slideInRight 0.3s ease-out forwards;
+        }
+
+        /* Utility for hiding scrollbar but keeping functionality */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 h-screen flex justify-center items-center overflow-hidden font-sans text-gray-900">
+
+    <!-- App Container -->
+    <div id="app-container" class="w-full max-w-md h-full sm:h-[850px] bg-white sm:rounded-[3rem] shadow-2xl overflow-hidden relative border border-gray-200">
+        
+        <!-- Header (Dynamic) -->
+        <header id="header" class="absolute top-0 left-0 right-0 bg-white/90 backdrop-blur-sm z-20 px-4 py-3 flex items-center justify-between shadow-sm h-14 transition-opacity duration-300">
+            <!-- Content injected by JS -->
+        </header>
+
+        <!-- Main Content Area -->
+        <main id="main-content" class="h-full w-full overflow-y-auto pt-14 relative bg-white">
+            <!-- Content injected by JS -->
+        </main>
+
+        <!-- Form Overlay Container -->
+        <div id="form-overlay" class="fixed inset-0 z-50 hidden items-center justify-center p-6 bg-transparent pointer-events-none">
+            <!-- Form injected by JS -->
+        </div>
+
+    </div>
+
+    <script>
+        // --- Data ---
+        const phones = [
+            { 
+                id: 1, 
+                name: 'iPhone 17 Pro Max', 
+                tag: 'Delivery Available',
+                options: [
+                    { name: 'Deep Blue', hex: 'bg-slate-900', img: 'https://i.ibb.co/bMPkbtbm/deep-Blue-17-Pro-Max-png.png' },
+                    { name: 'Cosmic Orange', hex: 'bg-orange-300', img: 'https://i.ibb.co/zWYZ1Krk/17-Pro-Max-Cosmic-Orange.png' },
+                    { name: 'Silver', hex: 'bg-gray-100', img: 'https://i.ibb.co/cKgbSsX5/silver-17-Pro-Max-png.png' }
+                ]
+            },
+            { 
+                id: 2, 
+                name: 'iPhone 16 Pro Max', 
+                tag: 'Delivery Available',
+                options: [
+                    { name: 'Black', hex: 'bg-zinc-900', img: 'https://i.ibb.co/zHrzMxR3/16-Pro-Max-black-jpg.png' },
+                    { name: 'Desert', hex: 'bg-orange-100', img: 'https://i.ibb.co/wr4rpTX6/16-Pro-Max-desert-jpg.png' },
+                    { name: 'White', hex: 'bg-gray-50', img: 'https://i.ibb.co/sdgVMxsZ/16-Pro-Max-white-jpg.png' }
+                ]
+            },
+            { 
+                id: 3, 
+                name: 'iPhone 17', 
+                tag: 'Delivery Available', 
+                options: [
+                    { name: 'Black', hex: 'bg-black', img: 'https://i.ibb.co/pvbxY4dc/iphone17-png.png' }
+                ]
+            },
+            { 
+                id: 4, 
+                name: 'iPhone 16', 
+                tag: 'Delivery Available', 
+                options: [
+                    { name: 'Black', hex: 'bg-black', img: 'https://i.ibb.co/TDMN6gd9/iphone16-jpg.png' }
+                ]
+            },
+            { 
+                id: 5, 
+                name: 'iPhone 17 Air', 
+                tag: 'Delivery Available', 
+                options: [
+                    { name: 'Black', hex: 'bg-black', img: 'https://i.ibb.co/Y4TQ4sH6/17-AIR-black.png' }
+                ]
+            },
+            { 
+                id: 6, 
+                name: 'iPhone 15 Pro Max', 
+                tag: 'Delivery Available', 
+                options: [
+                    { name: 'Black', hex: 'bg-black', img: 'https://i.ibb.co/FksRhWVk/15rpomax-jpg.png' }
+                ]
+            },
+        ];
+
+        const simOptions = [
+            { id: 0, src: 'https://i.ibb.co/ym67yxSj/sim-green-1.png' },
+            { id: 1, src: 'https://i.ibb.co/spwQXK0D/sim-blue-1.png' },
+            { id: 2, src: 'https://i.ibb.co/Y4NVhVgP/sim-red-1.png' },
+        ];
+
+        const formData = {
+            name: 'Jordan Lee',
+            email: 'jordan.l@mailhost.net',
+            address: '7428 Willow Creek, NV 89052'
+        };
+
+        // --- State ---
+        let state = {
+            view: 'list', // 'list', 'detail'
+            formOpen: false,
+            selectedPhoneId: null,
+            selectedColorIdx: 0,
+            selectedSimId: 0,
+            selectedStorage: '256GB',
+            isSuccess: false
+        };
+
+        // --- Elements ---
+        const appContainer = document.getElementById('app-container');
+        const headerEl = document.getElementById('header');
+        const mainContentEl = document.getElementById('main-content');
+        const formOverlayEl = document.getElementById('form-overlay');
+
+        // --- Render Functions ---
+
+        function renderHeader() {
+            if (state.formOpen) {
+                // Header is effectively hidden or overlapped by form, but we can keep it blank or static
+                // In the design, form mode usually has a clean slate, but let's keep it visible in background
+            }
+            
+            let content = '';
+
+            if (state.view === 'list') {
+                content = `
+                    <i data-lucide="menu" class="w-6 h-6 text-gray-600"></i>
+                    <div class="flex-1 mx-4 relative">
+                        <input type="text" placeholder="Search" class="w-full bg-gray-100 rounded-full py-1.5 pl-4 pr-10 text-sm focus:outline-none">
+                        <i data-lucide="search" class="w-4 h-4 text-gray-500 absolute right-3 top-2"></i>
+                    </div>
+                    <i data-lucide="shopping-cart" class="w-6 h-6 text-gray-600"></i>
+                `;
+            } else if (state.view === 'detail') {
+                const phone = phones.find(p => p.id === state.selectedPhoneId);
+                content = `
+                    <button onclick="goBack()" class="p-1 -ml-1 rounded-full hover:bg-gray-100">
+                        <i data-lucide="arrow-left" class="w-6 h-6 text-gray-600"></i>
+                    </button>
+                    <span class="font-semibold text-sm animate-fade-in">${phone ? phone.name : ''}</span>
+                    <div class="flex gap-3">
+                        <i data-lucide="heart" class="w-6 h-6 text-gray-400"></i>
+                        <i data-lucide="shopping-cart" class="w-6 h-6 text-gray-600"></i>
+                    </div>
+                `;
+            }
+
+            headerEl.innerHTML = content;
+            lucide.createIcons();
+        }
+
+        function renderList() {
+            const grid = document.createElement('div');
+            grid.className = "grid grid-cols-2 gap-4 p-4 pb-20 animate-fade-in";
+            
+            phones.forEach(phone => {
+                const card = document.createElement('div');
+                card.className = "product-card bg-white rounded-xl shadow-sm p-3 flex flex-col hover:shadow-md transition-shadow relative";
+                card.dataset.id = phone.id;
+
+                card.innerHTML = `
+                    <div class="h-40 mb-2 rounded-lg overflow-hidden flex items-center justify-center bg-gray-50">
+                         <div class="w-full h-full flex flex-col items-center justify-center relative overflow-hidden p-2">
+                            <img src="${phone.options[0].img}" alt="${phone.name}" class="w-full h-full object-contain scale-90">
+                        </div>
+                    </div>
+                    <h3 class="font-semibold text-sm mb-2 line-clamp-1">${phone.name}</h3>
+                    <p class="text-[10px] text-green-600 mb-3">${phone.tag}</p>
+                    <button onclick="handleAddToCart(event, ${phone.id})" class="mt-auto w-full bg-black text-white text-xs font-bold py-2 rounded-full active:scale-95 transition-transform">
+                        Add to cart
+                    </button>
+                `;
+                grid.appendChild(card);
+            });
+
+            mainContentEl.innerHTML = '';
+            mainContentEl.appendChild(grid);
+            mainContentEl.classList.remove('blur-sm', 'brightness-90', 'scale-95'); // Reset effects
+        }
+
+        function renderDetail() {
+            const phone = phones.find(p => p.id === state.selectedPhoneId);
+            if (!phone) return;
+
+            const currentOption = phone.options[state.selectedColorIdx] || phone.options[0];
+            const hasColors = phone.options.length > 1;
+
+            // Container
+            const container = document.createElement('div');
+            container.className = "h-full flex flex-col px-6 py-2 justify-evenly animate-fade-in";
+
+            // 1. Image Section
+            const imageSection = document.createElement('div');
+            imageSection.className = "flex justify-center flex-col items-center";
+            
+            // Dots
+            let dotsHtml = '';
+            if (hasColors) {
+                dotsHtml = `<div class="flex justify-center gap-2 mt-4">
+                    ${phone.options.map((_, idx) => `
+                        <div class="w-1.5 h-1.5 rounded-full ${idx === state.selectedColorIdx ? 'bg-black' : 'bg-gray-300'}"></div>
+                    `).join('')}
+                </div>`;
+            }
+
+            imageSection.innerHTML = `
+                <div onclick="openForm()" class="w-48 h-64 rounded-3xl overflow-hidden cursor-pointer hover:scale-105 transition-transform ring-4 ring-transparent hover:ring-blue-50 active:scale-95 flex items-center justify-center bg-transparent">
+                    <img id="detail-main-img" src="${currentOption.img}" alt="${phone.name}" class="w-full h-full object-contain transition-all duration-300">
+                </div>
+                ${dotsHtml}
+                <p class="text-xs text-gray-400 mt-4 animate-pulse">Tap phone to continue</p>
+            `;
+
+            // 2. Color Section
+            const colorSection = document.createElement('div');
+            colorSection.className = `mt-2 ${!hasColors ? 'hidden' : ''}`;
+            colorSection.innerHTML = `<h3 class="text-sm font-semibold mb-2">Color</h3>`;
+            
+            const colorContainer = document.createElement('div');
+            colorContainer.className = "flex gap-4";
+            
+            phone.options.forEach((opt, idx) => {
+                const isSelected = idx === state.selectedColorIdx;
+                const btn = document.createElement('div');
+                btn.className = `w-14 h-16 rounded-xl border-2 flex items-center justify-center cursor-pointer transition-all overflow-hidden ${isSelected ? 'border-blue-500 scale-110 bg-gray-50' : 'border-gray-200 bg-white'}`;
+                btn.onclick = () => selectColor(idx);
+                btn.innerHTML = `<img src="${opt.img}" class="w-full h-full object-contain p-1">`;
+                colorContainer.appendChild(btn);
+            });
+            colorSection.appendChild(colorContainer);
+
+            // 3. Sim Section
+            const simSection = document.createElement('div');
+            simSection.className = "mt-2";
+            simSection.innerHTML = `<h3 class="text-sm font-semibold mb-2">Sim</h3>`;
+            const simContainer = document.createElement('div');
+            simContainer.className = "flex gap-4";
+            
+            simOptions.forEach(sim => {
+                const isSelected = sim.id === state.selectedSimId;
+                const btn = document.createElement('div');
+                btn.className = `w-14 h-16 rounded-lg border-2 flex items-center justify-center cursor-pointer transition-all overflow-hidden ${isSelected ? 'border-blue-600 bg-blue-50 shadow-md scale-105' : 'border-gray-300 bg-white hover:border-gray-400'}`;
+                btn.onclick = () => selectSim(sim.id);
+                btn.innerHTML = `<img src="${sim.src}" class="w-full h-full object-contain p-1">`;
+                simContainer.appendChild(btn);
+            });
+            simSection.appendChild(simContainer);
+
+            // 4. Size Section
+            const sizeSection = document.createElement('div');
+            sizeSection.className = "mt-2 mb-4";
+            sizeSection.innerHTML = `<h3 class="text-sm font-semibold mb-2">Size</h3>`;
+            const sizeContainer = document.createElement('div');
+            sizeContainer.className = "flex gap-2";
+            
+            ['256GB', '512GB', '1TB'].forEach(size => {
+                const isSelected = size === state.selectedStorage;
+                const btn = document.createElement('button');
+                btn.className = `flex-1 py-2 rounded-lg border text-xs font-bold transition-colors ${isSelected ? 'border-black bg-black text-white' : 'border-gray-300 text-gray-600 hover:border-gray-400'}`;
+                btn.onclick = () => selectStorage(size);
+                btn.textContent = size;
+                sizeContainer.appendChild(btn);
+            });
+            sizeSection.appendChild(sizeContainer);
+
+            // Assemble
+            container.appendChild(imageSection);
+            container.appendChild(colorSection);
+            container.appendChild(simSection);
+            container.appendChild(sizeSection);
+
+            mainContentEl.innerHTML = '';
+            mainContentEl.appendChild(container);
+        }
+
+        function renderForm() {
+            if (!state.formOpen) {
+                formOverlayEl.classList.add('hidden');
+                formOverlayEl.classList.remove('flex', 'pointer-events-auto');
+                // Unblur background
+                mainContentEl.classList.remove('blur-sm', 'brightness-90', 'scale-90', 'opacity-40');
+                mainContentEl.classList.add('scale-100', 'opacity-100');
+                return;
+            }
+
+            // Blur Background
+            mainContentEl.classList.remove('scale-100', 'opacity-100');
+            mainContentEl.classList.add('blur-sm', 'brightness-90', 'scale-90', 'opacity-40', 'transition-all', 'duration-500', 'ease-in-out', 'transform', 'origin-center');
+
+            formOverlayEl.classList.remove('hidden');
+            formOverlayEl.classList.add('flex', 'pointer-events-auto');
+
+            // Form HTML
+            const formContent = `
+                <div class="w-full max-w-sm relative animate-slide-up-spring">
+                    <div id="form-card" class="bg-yellow-400 rounded-3xl p-8 shadow-2xl transition-all duration-700 ease-in-out ${state.isSuccess ? 'blur-md opacity-50 pointer-events-none' : ''}">
+                        <button onclick="closeForm()" class="absolute top-6 right-6 text-yellow-800 hover:text-black font-bold z-10">✕</button>
+                        
+                        <div class="space-y-5 mt-2">
+                            <div>
+                                <label class="block text-yellow-900 font-bold text-sm mb-1 ml-1">Name</label>
+                                <input type="text" value="${formData.name}" readonly class="w-full px-4 py-3 rounded-xl border-none bg-white text-gray-800 font-semibold shadow-sm text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-yellow-900 font-bold text-sm mb-1 ml-1">Email</label>
+                                <input type="email" value="${formData.email}" readonly class="w-full px-4 py-3 rounded-xl border-none bg-white text-gray-800 font-semibold shadow-sm text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-yellow-900 font-bold text-sm mb-1 ml-1">Address</label>
+                                <textarea readonly rows="2" class="w-full px-4 py-3 rounded-xl border-none bg-white text-gray-800 font-semibold shadow-sm text-sm resize-none">${formData.address}</textarea>
+                            </div>
+                            <button onclick="getInsights()" class="w-full bg-black text-white font-bold text-lg py-3 rounded-xl mt-2 hover:bg-gray-900 transition-colors shadow-lg active:scale-95">
+                                Get Insights
+                            </button>
+                        </div>
+                    </div>
+                    
+                    ${state.isSuccess ? `
+                        <div class="absolute inset-0 flex items-center justify-center z-20">
+                            <div class="bg-green-500 rounded-full p-6 shadow-2xl animate-scale-in">
+                                <i data-lucide="check" class="w-16 h-16 text-white stroke-[4]"></i>
+                            </div>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+            
+            formOverlayEl.innerHTML = formContent;
+            lucide.createIcons();
+        }
+
+        // --- Interaction Handlers ---
+
+        function handleAddToCart(e, phoneId) {
+            e.stopPropagation();
+            
+            const btn = e.currentTarget;
+            const card = btn.closest('.product-card');
+            const rect = card.getBoundingClientRect();
+            const phone = phones.find(p => p.id === phoneId);
+
+            // Create Overlay Element for Transition
+            const overlay = document.createElement('div');
+            overlay.className = "fixed z-50 bg-white flex flex-col items-center justify-start overflow-hidden shadow-2xl transition-all duration-500 cubic-bezier(0.4, 0, 0.2, 1)";
+            
+            // Initial Style (Matching Card)
+            overlay.style.top = `${rect.top}px`;
+            overlay.style.left = `${rect.left}px`;
+            overlay.style.width = `${rect.width}px`;
+            overlay.style.height = `${rect.height}px`;
+            overlay.style.borderRadius = "0.75rem"; // rounded-xl
+
+            // Content inside Overlay
+            overlay.innerHTML = `
+                <div class="w-full h-full flex flex-col pt-14 px-6 opacity-0 transition-opacity duration-300" id="overlay-content">
+                    <div class="mt-8 w-48 h-64 mx-auto rounded-3xl overflow-hidden">
+                        <div class="w-full h-full flex flex-col items-center justify-center relative overflow-hidden">
+                            <img src="${phone.options[0].img}" class="w-full h-full object-contain hover:scale-105">
+                        </div>
+                    </div>
+                     <div class="mt-6 space-y-4">
+                        <div class="h-4 bg-gray-100 w-1/3 rounded animate-pulse"></div>
+                        <div class="flex gap-4"><div class="w-12 h-12 rounded-xl bg-gray-100 animate-pulse"></div></div>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(overlay);
+
+            // Force Reflow
+            overlay.getBoundingClientRect();
+
+            // Animate to Full Screen
+            requestAnimationFrame(() => {
+                overlay.style.top = "0px";
+                overlay.style.left = "0px";
+                overlay.style.width = "100vw";
+                overlay.style.height = "100vh";
+                overlay.style.borderRadius = "0px";
+                
+                // Fade in content slightly later
+                setTimeout(() => {
+                    const content = document.getElementById('overlay-content');
+                    if(content) content.classList.remove('opacity-0');
+                }, 100);
+            });
+
+            // On Finish
+            setTimeout(() => {
+                state.selectedPhoneId = phoneId;
+                state.selectedColorIdx = 0;
+                state.selectedStorage = '256GB';
+                state.selectedSimId = 0;
+                state.view = 'detail';
+                
+                renderHeader();
+                renderDetail();
+                
+                // Remove overlay
+                overlay.remove();
+            }, 500);
+        }
+
+        function goBack() {
+            state.view = 'list';
+            state.selectedPhoneId = null;
+            state.formOpen = false;
+            state.isSuccess = false;
+            renderHeader();
+            renderList();
+        }
+
+        function selectColor(idx) {
+            state.selectedColorIdx = idx;
+            renderDetail();
+        }
+
+        function selectSim(id) {
+            state.selectedSimId = id;
+            renderDetail();
+        }
+
+        function selectStorage(size) {
+            state.selectedStorage = size;
+            renderDetail();
+        }
+
+        function openForm() {
+            state.formOpen = true;
+            state.isSuccess = false;
+            renderForm();
+        }
+
+        function closeForm() {
+            state.formOpen = false;
+            state.isSuccess = false;
+            renderForm();
+        }
+
+        function getInsights() {
+            state.isSuccess = true;
+            renderForm(); // Re-render to show checkmark and blur
+        }
+
+        // --- Initialization ---
+        renderHeader();
+        renderList();
+
+    </script>
+</body>
+</html>
